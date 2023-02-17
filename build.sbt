@@ -4,7 +4,7 @@ import wartremover.Wart._
 
 name := "magistracy-homeworks"
 version := "0.1"
-ThisBuild / scalaVersion := "3.2.1"
+scalaVersion := "3.2.1"
 
 scalacOptions := List(
   "-encoding",
