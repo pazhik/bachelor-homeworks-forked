@@ -36,8 +36,8 @@ class EncoderTest extends AnyFlatSpec with Matchers with Inside:
   }
 
   it should "correctly encode list" in {
-//    Encoder.encode(List(123, 321, 333)) shouldBe "123,321,333"
-//    Encoder.encode(List.empty[Int]) shouldBe ""
+    Encoder.encode(List(123, 321, 333)) shouldBe "123,321,333"
+    Encoder.encode(List.empty[Int]) shouldBe ""
 //    Encoder.encode(List(None)) shouldBe ""
 //    Encoder.encode(List(Some(123), Some(321), None)) shouldBe "123,321"
   }

@@ -1,61 +1,38 @@
 package mipt.homework2
 
-import cats.Functor
+import cats.{Bifunctor, Functor}
 import mipt.homework2.Decoder.Result
 import mipt.utils.Homeworks.TaskSyntax
 
 import java.time.{DayOfWeek, Instant}
+import scala.util.Try
 
-trait Decoder[T]:
-  def apply(raw: String): Decoder.Result[T]
-
+trait Decoder[E, T]:
+  def apply(raw: String): Decoder.Result[E, T]
 
 object Decoder:
 
-  trait Error
+  type Result[E, T] = Either[E, T]
 
-  type Result[T] = Either[Error, T]
+  def apply[E, T](using decoder: Decoder[E, T]): Decoder[E, T] = decoder
 
-  def apply[T](using decoder: Decoder[T]) = decoder
+  def attempt[T](unsafe: String => T): Decoder[Throwable, T] =
+    (raw: String) => Try(unsafe(raw)).toEither
 
-  def decode[T](raw: String)
-               (using decoder: Decoder[T]): Decoder.Result[T] =
+  def decode[E, T](raw: String)(using decoder: Decoder[E, T]): Decoder.Result[E, T] =
     decoder(raw)
 
+  task"Реализуйте Bifunctor для Decoder, используя Either.left проекцию"
+  given Bifunctor[Decoder] = new Bifunctor[Decoder]:
+    override def bimap[A, B, C, D](fab: Decoder[A, B])(f: A => C, g: B => D): Decoder[C, D] = ???
+
+object FDecoder:
+
+  type FDecoder[T] = Decoder[DecoderError, T]
+
   task"Реализуйте Functor для Decoder"
-  given Functor[Decoder] = new Functor[Decoder]:
-    override def map[A, B](fa: Decoder[A])(f: A => B): Decoder[B] = ???
-
-trait OptionDecoderInstances:
-  task"Реализуйте декодер для Option и произвольного типа, для которого есть Decoder в скоупе. Если исходная строка пустая или null, в результате должен быть None"
-  given[T](using Decoder[T]): Decoder[Option[T]] = ???
-
-trait ListDecoderInstances:
-  task"Реализуйте декодер для List и произвольного типа, для которого есть Decoder в скоупе. Элементы листа в исходной строке по условию задачи разделены запятой."
-  given[T: Decoder]: Decoder[List[T]] = ???
-
-
-object DecoderInstances extends OptionDecoderInstances, ListDecoderInstances:
-  case object NumberFormatDecoderError extends Decoder.Error
-
-  case object IllegalArgumentDecoderError extends Decoder.Error
-
-  case object DayOfWeekOutOfBoundError extends Decoder.Error
-  
-  case object DateTimeParseError extends Decoder.Error
-
-  task"Реализуйте декодер из строки в число, используя `NumberFormatDecoderError` в результате в случае, если строка - не число"
-  given Decoder[Int] = ???
-
-  task"Реализуйте декодер из строки в булево значение, используя `IllegalArgumentDecoderError` в результате в случае, если строка не парсится в boolean"
-  given Decoder[Boolean] = ???
-
-  task"Реализуйте декодер для DayOfWeek через использование существующего декодера"
-  given Decoder[DayOfWeek] = ???
-
-  task"Реализуйте декодер для Instant через использование декодера, который НЕ реализован выше (его нужно добавить). Instant в строке в формате 2023-02-17T17:00:00Z"
-  given Decoder[Instant] = ???
-
+  given Functor[FDecoder] = new Functor[FDecoder]:
+    override def map[A, B](fa: FDecoder[A])(f: A => B): FDecoder[B] = ???
 
 // не смог до конца сформировать свои мысли, но была идея подумать над вариантом сделать парсеры древовидной структуры, чтобы их можно было описывать в виде dsl:
 //
