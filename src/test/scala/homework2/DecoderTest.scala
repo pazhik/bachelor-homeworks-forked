@@ -1,7 +1,7 @@
 package homework2
 
 import mipt.homework2.Decoder
-import mipt.homework2.DecoderInstances.{DayOfWeekOutOfBoundError, IllegalArgumentDecoderError, NumberFormatDecoderError}
+import mipt.homework2.DecoderInstances.{given, _}
 import org.scalatest.Inside
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -10,7 +10,6 @@ import java.time.format.DateTimeFormatter
 import java.time.{Clock, DayOfWeek, Instant, OffsetDateTime}
 
 class DecoderTest extends AnyFlatSpec with Matchers with Inside:
-  import mipt.homework2.DecoderInstances.{given, *}
 
   behavior.of("Decoder")
 
@@ -31,7 +30,7 @@ class DecoderTest extends AnyFlatSpec with Matchers with Inside:
 
   it should "correctly decode instant" in {
     Decoder.decode[Instant]("2023-02-17T17:00:00Z") shouldBe Right(Instant.ofEpochSecond(1676653200))
-    Decoder.decode[Instant]("10") shouldBe Left(DayOfWeekOutOfBoundError)
+    Decoder.decode[Instant]("not-parsable-instant") shouldBe Left(DateTimeParseError)
   }
 
   it should "correctly decode option" in {

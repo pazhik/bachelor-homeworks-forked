@@ -41,6 +41,8 @@ object DecoderInstances extends OptionDecoderInstances, ListDecoderInstances:
   case object IllegalArgumentDecoderError extends Decoder.Error
 
   case object DayOfWeekOutOfBoundError extends Decoder.Error
+  
+  case object DateTimeParseError extends Decoder.Error
 
   task"Реализуйте декодер из строки в число, используя `NumberFormatDecoderError` в результате в случае, если строка - не число"
   given Decoder[Int] = ???
