@@ -25,10 +25,10 @@ object EncoderInstances:
   given[T: Encoder]: Encoder[Option[T]] = ???
 
   task"Реализуйте encoder для List и произвольного типа, для которого есть Encoder в скоупе. Элементы листа в результирующей строке должны быть разделены запятой."
-  given[T](using Encoder[T]): Decoder[List[T]] = ???
+  given[T](using Encoder[T]): Encoder[List[T]] = ???
 
   task"Реализуйте encoder для DayOfWeek через использование существующего encoder"
-  given Decoder[DayOfWeek] = ???
+  given Encoder[DayOfWeek] = ???
 
   task"Реализуйте encoder для Instant через использование encoder, который НЕ реализован выше (его нужно добавить). Конечный формат Instant - 2023-02-17T17:00:00Z"
-  given Decoder[Instant] = ???
+  given Encoder[Instant] = ???

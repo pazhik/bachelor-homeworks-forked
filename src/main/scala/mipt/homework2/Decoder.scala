@@ -26,11 +26,20 @@ object Decoder:
   given Functor[Decoder] = new Functor[Decoder]:
     override def map[A, B](fa: Decoder[A])(f: A => B): Decoder[B] = ???
 
-object DecoderInstances:
+trait OptionDecoderInstances:
+  task"Реализуйте декодер для Option и произвольного типа, для которого есть Decoder в скоупе. Если исходная строка пустая или null, в результате должен быть None"
+  given[T](using Decoder[T]): Decoder[Option[T]] = ???
+
+trait ListDecoderInstances:
+  task"Реализуйте декодер для List и произвольного типа, для которого есть Decoder в скоупе. Элементы листа в исходной строке по условию задачи разделены запятой."
+  given[T: Decoder]: Decoder[List[T]] = ???
+
+
+object DecoderInstances extends OptionDecoderInstances, ListDecoderInstances:
   case object NumberFormatDecoderError extends Decoder.Error
 
   case object IllegalArgumentDecoderError extends Decoder.Error
-  
+
   case object DayOfWeekOutOfBoundError extends Decoder.Error
 
   task"Реализуйте декодер из строки в число, используя `NumberFormatDecoderError` в результате в случае, если строка - не число"
@@ -41,15 +50,9 @@ object DecoderInstances:
 
   task"Реализуйте декодер для DayOfWeek через использование существующего декодера"
   given Decoder[DayOfWeek] = ???
-  
+
   task"Реализуйте декодер для Instant через использование декодера, который НЕ реализован выше (его нужно добавить). Instant в строке в формате 2023-02-17T17:00:00Z"
   given Decoder[Instant] = ???
-
-  task"Реализуйте декодер для Option и произвольного типа, для которого есть Decoder в скоупе. Если исходная строка пустая или null, в результате должен быть None"
-  given[T: Decoder]: Decoder[Option[T]] = ???
-
-  task"Реализуйте декодер для List и произвольного типа, для которого есть Decoder в скоупе. Элементы листа в исходной строке по условию задачи разделены запятой."
-  given[T](using Decoder[T]): Decoder[List[T]] = ???
 
 
 // не смог до конца сформировать свои мысли, но была идея подумать над вариантом сделать парсеры древовидной структуры, чтобы их можно было описывать в виде dsl:
