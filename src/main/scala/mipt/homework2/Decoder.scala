@@ -4,7 +4,6 @@ import cats.{Bifunctor, Functor}
 import mipt.homework2.Decoder.Result
 import mipt.utils.Homeworks.TaskSyntax
 
-import java.time.{DayOfWeek, Instant}
 import scala.util.Try
 
 trait Decoder[+E, +T]:
@@ -30,29 +29,9 @@ object FDecoder:
 
   type FDecoder[T] = Decoder[DecoderError, T]
 
+  def decode[T](raw: String)(using decoder: FDecoder[T]): Decoder.Result[DecoderError, T] =
+    decoder(raw)
+
   task"Реализуйте Functor для Decoder"
   given Functor[FDecoder] = new Functor[FDecoder]:
     override def map[A, B](fa: FDecoder[A])(f: A => B): FDecoder[B] = ???
-
-// не смог до конца сформировать свои мысли, но была идея подумать над вариантом сделать парсеры древовидной структуры, чтобы их можно было описывать в виде dsl:
-//
-//final case class OptionGroupSimple(i: Option[Int], b: Option[Boolean], s: Option[String])
-//final case class OptionGroupComplex(foo: Option[Int], bar: Option[String], anotherGroup: OptionGroupSimple)
-//
-//given ConfigParser[OptionGroupComplex] = (
-//  OptionParser[Int]("foo"),
-//  OptionParser[String]("bar"),
-//  OptionGroupParser("anotherGroup") {
-//    (
-//      OptionParser[Int]("intOption"),
-//      OptionParser[Boolean]("boolOption"),
-//      OptionParser[String]("stringOption")
-//    ).mapN(OptionGroupSimple)
-//  }
-//).mapN(OptionGroupComplex)
-
-//sealed trait Node
-//
-//final case class Option[T](value: T) extends Node
-//
-//final case class OptionGroup(options: Map[String, Node]) extends Node

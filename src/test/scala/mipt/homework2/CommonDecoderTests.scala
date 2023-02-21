@@ -1,20 +1,22 @@
 package mipt.homework2
 
+import mipt.homework2.FDecoder.FDecoder
+import mipt.homework2.domain.DegreesFahrenheit
 import org.scalatest.Ignore
 import org.scalatest.flatspec.{AnyFlatSpec, AnyFlatSpecLike}
 import org.scalatest.matchers.should.Matchers
 
-import java.time.{DayOfWeek, Instant}
-
 class CommonDecoderTests(using
-    i: Decoder[DecoderError, Int],
-    b: Decoder[DecoderError, Boolean],
-    d: Decoder[DecoderError, DayOfWeek],
-    inst: Decoder[DecoderError, Instant],
-    o: Decoder[DecoderError, Option[Int]],
-    li: Decoder[DecoderError, List[Int]],
-    loi: Decoder[DecoderError, List[Option[Int]]],
-    oli: Decoder[DecoderError, Option[List[Int]]]
+                         Decoder[DecoderError, Int],
+                         Decoder[DecoderError, Boolean],
+                         Decoder[DecoderError, String],
+                         Decoder[DecoderError, DegreesFahrenheit],
+                         Decoder[DecoderError, Option[Int]],
+                         Decoder[DecoderError, Option[String]],
+                         Decoder[DecoderError, List[Int]],
+                         Decoder[DecoderError, List[Option[Int]]],
+                         Decoder[DecoderError, List[Option[String]]],
+                         Decoder[DecoderError, Option[List[Int]]]
 ) extends AnyFlatSpec with Matchers:
   behavior.of("Decoder")
 
@@ -28,26 +30,25 @@ class CommonDecoderTests(using
     Decoder.decode[DecoderError, Boolean]("aaa1") shouldBe Left(IllegalArgumentDecoderError)
   }
 
-  it should "correctly decode day of week" in {
-    Decoder.decode[DecoderError, DayOfWeek]("1") shouldBe Right(DayOfWeek.MONDAY)
-    Decoder.decode[DecoderError, DayOfWeek]("10") shouldBe Left(DayOfWeekOutOfBoundError)
-  }
-
-  it should "correctly decode instant" in {
-    Decoder.decode[DecoderError, Instant]("2023-02-17T17:00:00Z") shouldBe Right(Instant.ofEpochSecond(1676653200))
-    Decoder.decode[DecoderError, Instant]("not-parsable-instant") shouldBe Left(DateTimeParseError)
+  it should "correctly decode degrees celsius" in {
+    Decoder.decode[DecoderError, DegreesFahrenheit]("1") shouldBe Right(DegreesFahrenheit(1))
+    Decoder.decode[DecoderError, DegreesFahrenheit]("aaa") shouldBe Left(InvalidDegreesFahrenheitValue)
   }
 
   it should "correctly decode option" in {
     Decoder.decode[DecoderError, Option[Int]]("123") shouldBe Right(Some(123))
     Decoder.decode[DecoderError, Option[Int]]("abc") shouldBe Left(NumberFormatDecoderError)
+    Decoder.decode[DecoderError, Option[String]]("abc") shouldBe Right(Some("abc"))
     Decoder.decode[DecoderError, Option[Int]]("") shouldBe Right(None)
+    Decoder.decode[DecoderError, Option[Int]](null) shouldBe Right(None)
+    Decoder.decode[DecoderError, Option[Int]]("<none>") shouldBe Right(None)
   }
 
   it should "correctly decode list" in {
     Decoder.decode[DecoderError, List[Int]]("123, 321, 333") shouldBe Right(List(123, 321, 333))
     Decoder.decode[DecoderError, List[Int]]("abc") shouldBe Left(NumberFormatDecoderError)
     Decoder.decode[DecoderError, List[Int]]("") shouldBe Right(List.empty)
-    Decoder.decode[DecoderError, List[Option[Int]]]("1, 2, 3") shouldBe Right(List(Some(1), Some(2), Some(3)))
+    Decoder.decode[DecoderError, List[Option[Int]]]("1, 2, 3, <none>") shouldBe Right(List(Some(1), Some(2), Some(3), None))
+    Decoder.decode[DecoderError, List[Option[String]]]("abc, 111, <none>") shouldBe Right(List(Some("abc"), Some("111"), None))
     Decoder.decode[DecoderError, Option[List[Int]]]("1, 2, 3") shouldBe Right(Some(List(1, 2, 3)))
   }
