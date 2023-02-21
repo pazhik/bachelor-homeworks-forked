@@ -1,4 +1,4 @@
-package homework2
+package mipt.homework2
 
 import mipt.homework2.Encoder
 import org.scalatest.Inside

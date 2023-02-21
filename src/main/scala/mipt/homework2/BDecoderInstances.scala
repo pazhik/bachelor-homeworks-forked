@@ -18,13 +18,13 @@ object BDecoderInstances extends OptionBDecoderInstances, ListBDecoderInstances:
   import Decoder.given
 
   task"Реализуйте декодер из строки в число с заданным типом ошибки, используя Decoder.attempt() и Bifunctor"
-  given Decoder[NumberFormatDecoderError, Int] = ???
+  given Decoder[NumberFormatDecoderError.type, Int] = ???
 
   task"Реализуйте декодер из строки в булево значение, используя Decoder.attempt() и Bifunctor"
-  given Decoder[IllegalArgumentDecoderError, Boolean] = ???
+  given Decoder[IllegalArgumentDecoderError.type, Boolean] = ???
 
   task"Реализуйте декодер для DayOfWeek через использование существующего декодера и реализованного инстанса Functor"
-  given Decoder[DayOfWeekOutOfBoundError, DayOfWeek] = ???
+  given Decoder[DayOfWeekOutOfBoundError.type, DayOfWeek] = ???
 
   task"Реализуйте декодер для Instant через использование декодера, который НЕ реализован выше (его нужно добавить), и реализованного инстанса Functor. Instant в строке в формате 2023-02-17T17:00:00Z"
-  given Decoder[DateTimeParseError, Instant] = ???
+  given Decoder[DateTimeParseError.type, Instant] = ???

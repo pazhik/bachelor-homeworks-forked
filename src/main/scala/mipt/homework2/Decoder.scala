@@ -7,7 +7,7 @@ import mipt.utils.Homeworks.TaskSyntax
 import java.time.{DayOfWeek, Instant}
 import scala.util.Try
 
-trait Decoder[E, T]:
+trait Decoder[+E, +T]:
   def apply(raw: String): Decoder.Result[E, T]
 
 object Decoder:
@@ -51,8 +51,8 @@ object FDecoder:
 //  }
 //).mapN(OptionGroupComplex)
 
-sealed trait Node
-
-final case class Option[T](value: T) extends Node
-
-final case class OptionGroup(options: Map[String, Node]) extends Node
+//sealed trait Node
+//
+//final case class Option[T](value: T) extends Node
+//
+//final case class OptionGroup(options: Map[String, Node]) extends Node
