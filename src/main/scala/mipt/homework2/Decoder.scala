@@ -2,7 +2,6 @@ package mipt.homework2
 
 import cats.{Bifunctor, Functor}
 import mipt.homework2.Decoder.Result
-import mipt.utils.Homeworks.TaskSyntax
 
 import scala.util.Try
 
@@ -21,9 +20,8 @@ object Decoder:
   def decode[E, T](raw: String)(using decoder: Decoder[E, T]): Decoder.Result[E, T] =
     decoder(raw)
 
-  task"Реализуйте Bifunctor для Decoder, используя Either.left проекцию"
-  given Bifunctor[Decoder] = new Bifunctor[Decoder]:
-    override def bimap[A, B, C, D](fab: Decoder[A, B])(f: A => C, g: B => D): Decoder[C, D] = ???
+  given Bifunctor[Decoder] =
+    task"Реализуйте Bifunctor для Decoder, используя Either.left проекцию" (2, 0)
 
 object FDecoder:
 
@@ -32,6 +30,4 @@ object FDecoder:
   def decode[T](raw: String)(using decoder: FDecoder[T]): Decoder.Result[DecoderError, T] =
     decoder(raw)
 
-  task"Реализуйте Functor для Decoder"
-  given Functor[FDecoder] = new Functor[FDecoder]:
-    override def map[A, B](fa: FDecoder[A])(f: A => B): FDecoder[B] = ???
+  given Functor[FDecoder] = task"Реализуйте Functor для Decoder" (1, 0)

@@ -48,7 +48,11 @@ class CommonDecoderTests(using
     Decoder.decode[DecoderError, List[Int]]("123, 321, 333") shouldBe Right(List(123, 321, 333))
     Decoder.decode[DecoderError, List[Int]]("abc") shouldBe Left(NumberFormatDecoderError)
     Decoder.decode[DecoderError, List[Int]]("") shouldBe Right(List.empty)
-    Decoder.decode[DecoderError, List[Option[Int]]]("1, 2, 3, <none>") shouldBe Right(List(Some(1), Some(2), Some(3), None))
-    Decoder.decode[DecoderError, List[Option[String]]]("abc, 111, <none>") shouldBe Right(List(Some("abc"), Some("111"), None))
+    Decoder.decode[DecoderError, List[Option[Int]]]("1, 2, 3, <none>") shouldBe Right(
+      List(Some(1), Some(2), Some(3), None)
+    )
+    Decoder.decode[DecoderError, List[Option[String]]]("abc, 111, <none>") shouldBe Right(
+      List(Some("abc"), Some("111"), None)
+    )
     Decoder.decode[DecoderError, Option[List[Int]]]("1, 2, 3") shouldBe Right(Some(List(1, 2, 3)))
   }
