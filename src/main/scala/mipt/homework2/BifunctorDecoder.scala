@@ -6,7 +6,7 @@ import mipt.utils.Homeworks.TaskSyntax
 //trait BifunctorDecoder[E, T]:
 //  def apply(raw: String): BifunctorDecoder.Result[E, T]
 //
-//object BifunctorDecoder:
+object BifunctorDecoder
 //  type Result[E, T] = Either[E, T]
 //
 //  task"Реализуйте Bifunctor для Decoder, используя Either.left проекцию"
@@ -23,3 +23,4 @@ import mipt.utils.Homeworks.TaskSyntax
 //  task"Реализуйте Functor для Decoder"
 //  given Functor[DDecoder] = new Functor[DDecoder]:
 //    override def map[A, B](fa: DDecoder[A])(f: A => B): DDecoder[B] = ???
+

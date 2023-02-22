@@ -33,26 +33,3 @@ object FDecoder:
   task"Реализуйте Functor для Decoder"
   given Functor[FDecoder] = new Functor[FDecoder]:
     override def map[A, B](fa: FDecoder[A])(f: A => B): FDecoder[B] = ???
-
-// не смог до конца сформировать свои мысли, но была идея подумать над вариантом сделать парсеры древовидной структуры, чтобы их можно было описывать в виде dsl:
-//
-//final case class OptionGroupSimple(i: Option[Int], b: Option[Boolean], s: Option[String])
-//final case class OptionGroupComplex(foo: Option[Int], bar: Option[String], anotherGroup: OptionGroupSimple)
-//
-//given ConfigParser[OptionGroupComplex] = (
-//  OptionParser[Int]("foo"),
-//  OptionParser[String]("bar"),
-//  OptionGroupParser("anotherGroup") {
-//    (
-//      OptionParser[Int]("intOption"),
-//      OptionParser[Boolean]("boolOption"),
-//      OptionParser[String]("stringOption")
-//    ).mapN(OptionGroupSimple)
-//  }
-//).mapN(OptionGroupComplex)
-
-sealed trait Node
-
-final case class Option[T](value: T) extends Node
-
-final case class OptionGroup(options: Map[String, Node]) extends Node
