@@ -17,10 +17,10 @@ trait ListBDecoderInstances:
            Элементы листа в исходной строке разделены запятой.""" (2, 2)
 
 object BDecoderInstances extends OptionBDecoderInstances, ListBDecoderInstances:
-  given strDecoder: Decoder[DecoderError, String] =
+  given Decoder[DecoderError, String] =
     task"Реализуйте декодер из строки в строку" (2, 3)
 
-  given intDecoder: Decoder[NumberFormatDecoderError.type, Int] =
+  given Decoder[NumberFormatDecoderError.type, Int] =
     task"Реализуйте декодер из строки в число с заданным типом ошибки, используя Decoder.attempt() и Bifunctor" (2, 4)
 
   given Decoder[IllegalArgumentDecoderError.type, Boolean] =
