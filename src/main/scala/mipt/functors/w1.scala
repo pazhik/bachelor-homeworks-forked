@@ -38,6 +38,11 @@ trait MonoidInstances {
     def empty: List[A]                           = List()
     def combine(x: List[A], y: List[A]): List[A] = x ++ y
   }
+
+  given Monoid[Double] = new Monoid[Double] {
+    def empty: Double = 0
+    def combine(x: Double, y: Double): Double = x + y
+  }
 }
 
 // Adding syntax
