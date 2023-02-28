@@ -13,8 +13,8 @@ val metricValue2: Eff[Double] = ???
 
 def prevMetricValue: Eff[Double] = ???
 
-def computeReq2(using BlaBla[F[_]]): F[Boolean] = ???
-  (metricValue product prevMetricValue).map(_ > _)
+//def computeReq2(using BlaBla[F[_]]): F[Boolean] = ???
+//  (metricValue product prevMetricValue).map(_ > _)
 
 
 // applicatives here are
