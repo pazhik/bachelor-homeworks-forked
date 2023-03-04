@@ -16,6 +16,8 @@ trait ApplicativeError[F[_], E] extends Applicative[F] {
 }
 
 object ApplicativeError:
+  def apply[F[_], E](using ApplicativeError[F, E]): ApplicativeError[F, E] = summon[ApplicativeError[F, E]]
+  
   given [E]: ApplicativeError[EitherE[E], E] = new ApplicativeError[EitherE[E], E]:
     override def raiseError[A](e: E): EitherP[E, A] = LeftP(e)
 
@@ -61,3 +63,7 @@ object ApplicativeError:
 
     override def ap[A, B](fab: EitherT[F, E, A => B])(fa: EitherT[F, E, A]): EitherT[F, E, B] =
       Applicative[EitherTF[F, E]].ap(fab)(fa)
+
+object ApplicativeErrorSyntax:
+  extension [E] (e: E)
+    def raiseError[F[_], A](using ApplicativeError[F, E]): F[A] = ApplicativeError[F, E].raiseError(e)

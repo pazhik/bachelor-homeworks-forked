@@ -10,6 +10,8 @@ trait Ask[F[_], E]:
   def ask: F[E]
 
 object Ask:
+  def apply[F[_], E](using Ask[F, E]): Ask[F, E] = summon[Ask[F, E]]
+  
   given [R]: Ask[ReaderR[R], R] = new Ask[ReaderR[R], R]:
     override def ask: ReaderP[R, R] = identity
 
