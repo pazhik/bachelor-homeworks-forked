@@ -6,6 +6,7 @@ import cats.syntax.flatMap.toFlatMapOps
 import cats.syntax.functor.toFunctorOps
 import cats.syntax.traverse.toTraverseOps
 
+import cats.syntax.applicativeError
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
@@ -33,7 +34,11 @@ object UserRepository:
 
     def update[F[_]](user: User): Op[F, Unit] = _.update(user)
 
-    // реализуйте композитные методы, используя базовые выше
+    /** реализуйте композитные методы, используя базовые выше
+      *
+      *  для работы с ошибками можно использовать синтаксис из cats.syntax.applicativeError
+      *  val err: Op[User] = UserNotFoundError(UserId(1)).raiseError[Op, User]
+      */
 
     /** Метод опционального поиска пользователя */
     def findMaybe[F[_]](userId: UserId)(using me: MonadThrow[F]): Op[F, Option[User]] =
