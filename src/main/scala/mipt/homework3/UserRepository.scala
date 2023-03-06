@@ -7,7 +7,7 @@ import mipt.homework3.UserRepository.{RepoError, UserNotFoundError}
 
 import scala.concurrent.Future
 
-abstract class UserRepository[F[_]: Monad]:
+trait UserRepository[F[_]]:
   def findAll(): F[List[User]]
   def create(name: UserName, age: Age, friends: Set[UserId] = Set.empty): F[User]
   def delete(user: User): F[Unit]
@@ -44,52 +44,54 @@ object Users:
   import cats.syntax.flatMap.toFlatMapOps
   import cats.syntax.functor.toFunctorOps
 
-  def findAll[F[_]](): UserRepository.Operation[F, List[User]] =
+  type F[_]
+
+  def findAll(): UserRepository.Operation[F, List[User]] =
     _.findAll()
 
-  def create[F[_]](name: UserName, age: Age, friends: Set[UserId]): UserRepository.Operation[F, User] =
+  def create(name: UserName, age: Age, friends: Set[UserId]): UserRepository.Operation[F, User] =
     _.create(name, age, friends)
 
-  def delete[F[_]](user: User): UserRepository.Operation[F, Unit] = _.delete(user)
+  def delete(user: User): UserRepository.Operation[F, Unit] = _.delete(user)
 
-  def update[F[_]](user: User): UserRepository.Operation[F, Unit] = _.update(user)
+  def update(user: User): UserRepository.Operation[F, Unit] = _.update(user)
 
   // реализуйте композитные методы, используя базовые выше
 
-  def findMaybe[F[_]](user: User): UserRepository.Operation[F, Option[User]] = ???
+  def findMaybe(user: User): UserRepository.Operation[F, Option[User]] = ???
 
   /** Метод поиска пользователя. Если пользователь не найден, должна генерироваться ошибка UserNotFound */
-  def find[F[_]](user: User)(using me: MonadError[F, RepoError]): UserRepository.Operation[F, User] = ???
+  def find(user: User)(using me: MonadError[F, RepoError]): UserRepository.Operation[F, User] = ???
 
   /** Метод добавления друга к пользователю */
-  def addFriend[F[_]](currentUser: User, friend: User)(using
+  def addFriend(currentUser: User, friend: User)(using
       me: MonadError[F, RepoError]
   ): UserRepository.Operation[F, User] = ???
 
   /** Метод удаления друга от пользователю */
-  def deleteFriend[F[_]: Monad](currentUser: User, friend: User)(using
+  def deleteFriend(currentUser: User, friend: User)(using
       me: MonadError[F, RepoError]
   ): UserRepository.Operation[F, Unit] = ???
 
   /** Метод получения всех друзей пользователя */
-  def getUserFriends[F[_]: Monad](user: User)(using
+  def getUserFriends(user: User)(using
       me: MonadError[F, RepoError]
   ): UserRepository.Operation[F, List[User]] = ???
 
   /** Метод получения имен пользователей, у которых в друзьях только взрослые пользователи */
-  def getUserNamesWithOnlyAdultFriends[F[_]: Monad]()(using
+  def getUserNamesWithOnlyAdultFriends()(using
       me: MonadError[F, RepoError]
   ): UserRepository.Operation[F, List[UserName]] = ???
 
   /** Метод удаления всех молодых пользователей
     */
-  def deleteAllNonAdultUsers[F[_]: Monad]()(using
+  def deleteAllNonAdultUsers()(using
       me: MonadError[F, RepoError]
   ): UserRepository.Operation[F, Unit] = ???
 
   /** Метод создания сообщества, где все являются друзьями друг для друга. На вход подается список атрибутов
     * пользователей из сообщества
     */
-  def createCommunity[F[_]: Monad](community: List[(UserName, Age)])(using
+  def createCommunity(community: List[(UserName, Age)])(using
       me: MonadError[F, RepoError]
   ): UserRepository.Operation[F, List[User]] = ???
