@@ -8,7 +8,7 @@ import mipt.monad.MonadSyntax.*
 
 import scala.annotation.tailrec
 
-case class WriterT[F[_]: Monad, W: Monoid, A](value: F[Writer[W, A]])
+case class WriterT[F[_], W: Monoid, A](value: F[Writer[W, A]])
 type WriterTF[F[_], W] = [A] =>> WriterT[F, W, A]
 
 object WriterT:
@@ -24,9 +24,10 @@ object WriterT:
       } yield Writer(Monoid[W].combine(l1, l2), b))
 
     override def tailRecM[A, B](a: A)(f: A => WriterT[F, W, Either[A, B]]): WriterT[F, W, B] =
-      WriterT(
-        f(a).value.flatMap(_ match
-          case wa@Writer(_, Left(a)) => tailRecM(a)(f).value.flatMap(wb => wa.flatMap(_ => wb).pure[F])
-          case Writer(log, Right(b)) => Writer(log, b).pure[F]
+      WriterT(Monad[F].tailRecM(Writer(Monoid[W].empty, a))(w =>
+        val Writer(l1, a) = w
+        f(a).value.map(_ match
+          case Writer(l2, Left(a))  => Left(Writer(Monoid[W].combine(l1, l2), a))
+          case Writer(l2, Right(b)) => Right(Writer(Monoid[W].combine(l1, l2), b))
         )
-      )
+      ))

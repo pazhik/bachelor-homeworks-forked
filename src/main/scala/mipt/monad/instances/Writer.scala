@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 
 import mipt.monad.MonadSyntax.*
 
-case class Writer[W: Monoid, A](log: W, value: A)
+case class Writer[W, A](log: W, value: A)
 type WriterW[W] = [A] =>> Writer[W, A]
 
 object Writer:

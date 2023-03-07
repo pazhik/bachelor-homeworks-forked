@@ -1,5 +1,6 @@
 package mipt.examples
 
+import cats.Functor
 import mipt.monad.context.Ask
 import mipt.monad.instances.{Reader, ReaderR, StateS, Writer, WriterW}
 import mipt.monad.instances.Reader.given
@@ -26,9 +27,9 @@ object Example5_Ask:
   type Log = String
   type StateValue = Int
 
-  @main def e5: Unit =
-    type OurMonad[A] = ReaderTF[StateTF[WriterW[Log], StateValue], Int][A]
+  type OurMonad[A] = ReaderTF[StateTF[WriterW[Log], StateValue], Int][A]
 
+  @main def e5: Unit =
     val computation: ReaderT[StateTF[WriterW[Log], StateValue], Int, Unit] =
       ReaderT(r => StateT(s => Writer("I'm a very useful log", ((), s + r))))
 
@@ -36,3 +37,27 @@ object Example5_Ask:
       computation.flatMap(_ => Ask[OurMonad, Int].ask)
 
     println(askedComputation.value(2023).value(42))
+
+  trait ContextValidator[F[_], A]:
+    def getValidatedContext: F[Option[A]]
+
+  object ContextValidator:
+    def apply[F[_]: Functor, A](validation: A => Option[A])(using Ask[F, A]): ContextValidator[F, A] =
+      new Impl[F, A](validation)
+
+    class Impl[F[_]: Functor, A](validation: A => Option[A])(using Ask[F, A]) extends ContextValidator[F, A]:
+      override def getValidatedContext: F[Option[A]] = Ask[F, A].ask.map(validation)
+
+  @main def e5_1: Unit =
+    val cv: ContextValidator[ReaderR[Int], Int] = ContextValidator(i => if (i > 0) then Some(i) else None)
+
+    println(cv.getValidatedContext(2023))
+    println(cv.getValidatedContext(-2023))
+
+    val cv1: ContextValidator[OurMonad, Int] = ContextValidator(i => if (i > 0) then Some(i) else None)
+
+    println(cv1.getValidatedContext.value(2023).value(42))
+    println(cv1.getValidatedContext.value(-2023).value(42))
+
+    given Ask[StateTF[ReaderR[Int], Int], Int] = new Ask:
+      override def ask: StateT[ReaderR[Int], Int, Int] = StateT.fromFA(Ask[ReaderR[Int], Int].ask)

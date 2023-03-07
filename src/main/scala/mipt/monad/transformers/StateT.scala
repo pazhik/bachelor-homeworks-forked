@@ -1,16 +1,18 @@
 package mipt.monad.transformers
 
-import cats.Monad
+import cats.{Functor, Monad}
 import mipt.monad.ApplicativeSyntax.*
 import mipt.monad.FunctorSyntax.*
 import mipt.monad.MonadSyntax.*
 
 import scala.annotation.tailrec
 
-case class StateT[F[_]: Monad, S, A](value: S => F[(A, S)])
+case class StateT[F[_], S, A](value: S => F[(A, S)])
 type StateTF[F[_], S] = [A] =>> StateT[F, S, A]
 
 object StateT:
+  def fromFA[F[_]: Functor, S, A](fa: F[A]): StateT[F, S, A] = StateT(s => fa.map(a => (a, s)))
+
   given [F[_]: Monad, S]: Monad[StateTF[F, S]] = new Monad[StateTF[F, S]]:
     override def pure[A](a: A): StateT[F, S, A] = StateT(s => (a, s).pure[F])
 
@@ -22,9 +24,7 @@ object StateT:
       } yield st2)
 
     override def tailRecM[A, B](a: A)(f: A => StateT[F, S, Either[A, B]]): StateT[F, S, B] =
-      StateT(
-        s => f(a).value(s).flatMap(_ match
-          case (Left(a), s)  => tailRecM(a)(f).value(s)
-          case (Right(b), s) => (b, s).pure[F]
-        )
-      )
+      StateT(s => Monad[F].tailRecM((a, s)){ case (a, s) => f(a).value(s).map(_ match
+        case (Left(a), s)  => Left(a, s)
+        case (Right(b), s) => Right(b, s)
+      )})

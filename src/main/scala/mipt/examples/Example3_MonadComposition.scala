@@ -14,9 +14,9 @@ object Question3_MonadComposition:
 
   def readConfig: Reader[Int, Int] = ???
   def proceedValue: Int => Result = ???
-  def logResult: Result => Writer[Result, Unit] = ???
+  def logResult: Result => Writer[Result, Result] = ???
 
-  def anotherComputation: Unit => Reader[Int, Writer[Result, Int]] = ??? // How to compose with our result???
+  def anotherComputation: Result => Reader[Int, Writer[Result, Int]] = ??? // How to compose with our result???
 
 object ComposedMonad:
   given [F[_]: Monad, G[_]: Monad]: Monad[ComposedFG[F, G]] = new Monad[ComposedFG[F, G]]:
@@ -39,32 +39,34 @@ object ReaderWriter:
         b <- f(a).value(r)
       } yield b)
 
+      /*
+       fa: R => Writer[A]
+       f: A => R => Writer[B]
+
+        r =>
+          val a = fa(r)
+          val b = f(a)(r)
+          b
+       */
+
     override def tailRecM[A, B](a: A)(f: A => ReaderWriter[R, W, Either[A, B]]): ReaderWriter[R, W, B] =
-      ReaderWriter(
-        r => f(a).value(r).flatMap(_ match
-          case Left(a) => tailRecM(a)(f).value(r)
-          case Right(b) => b.pure[WriterW[W]]
-        )
-      )
+      ReaderWriter(r => Monad[WriterW[W]].tailRecM(a)(a => f(a).value(r)))
 
 object Example3_MonadComposition:
   type Result = String
 
   def readConfig: Reader[Int, Int] = identity
   def proceedValue: Int => Result = i => s"config number $i is readed"
-  def logResult: Result => Writer[Result, Unit] = r => Writer(r, ())
+  def logResult: Result => Writer[Result, Result] = r => Writer(r, r)
 
-  def anotherComputation: Unit => Reader[Int, Writer[Result, Int]] =
-    (_: Unit) => {
-      println("Yeah!")
-      42
-    }.pure[WriterW[Result]].pure[ReaderR[Int]]
+  def anotherComputation: Result => Reader[Int, Writer[Result, Int]] =
+    r => r.length.pure[WriterW[Result]].pure[ReaderR[Int]]
 
   @main def e3: Unit =
-    val composition: Reader[Int, Writer[Result, Unit]] = readConfig.map(proceedValue).map(logResult)
+    val composition: Reader[Int, Writer[Result, Result]] = readConfig.map(proceedValue).map(logResult)
 
     val wrappedComposition = ReaderWriter(composition)
-    val wrappedFunction = (u: Unit) => ReaderWriter(anotherComputation(u))
+    val wrappedFunction = (u: Result) => ReaderWriter(anotherComputation(u))
     val flatMappedComposition = wrappedComposition.flatMap(wrappedFunction)
 
     println(flatMappedComposition.value(2023))
@@ -91,24 +93,16 @@ object ReaderOption:
       } yield b)
 
     override def tailRecM[A, B](a: A)(f: A => ReaderOption[R, Either[A, B]]): ReaderOption[R, B] =
-      ReaderOption(
-        r => f(a).value(r).flatMap(_ match
-          case Left(a) => tailRecM(a)(f).value(r)
-          case Right(b) => b.pure[Option]
-        )
-      )
+      ReaderOption(r => Monad[Option].tailRecM(a)(a => f(a).value(r)))
 
 object Example3_1_MonadComposition:
   type PositiveInt = Int
-  
+
   def readConfig: Reader[Int, Int] = identity
   def validateValue: Int => Option[PositiveInt] = i => if i > 0 then Some(i) else None
 
   def anotherComputation: PositiveInt => Reader[Int, Option[Int]] =
-    (_: PositiveInt) => {
-      println("Yeah!")
-      42
-    }.pure[Option].pure[ReaderR[Int]]
+    pi => (pi + 42).pure[Option].pure[ReaderR[Int]]
 
   @main def e3_1: Unit =
     val composition: Reader[Int, Option[PositiveInt]] = readConfig.map(validateValue)
@@ -122,7 +116,7 @@ object Example3_1_MonadComposition:
 
 object Question3_2_ReaderEitherComposition:
   type PositiveInt = Int
-  
+
   def readConfig: Reader[Int, Int] = ???
   def validateValue: Int => Either[String, PositiveInt] = ???
 
@@ -142,24 +136,16 @@ object ReaderEither:
       } yield b)
 
     override def tailRecM[A, B](a: A)(f: A => ReaderEither[R, E, Either[A, B]]): ReaderEither[R, E, B] =
-      ReaderEither(
-        r => f(a).value(r).flatMap(_ match
-          case Left(a) => tailRecM(a)(f).value(r)
-          case Right(b) => b.pure[EitherE[E]]
-        )
-      )
+      ReaderEither(r => Monad[EitherE[E]].tailRecM(a)(a => f(a).value(r)))
 
 object Example3_2_MonadComposition:
   type PositiveInt = Int
-  
+
   def readConfig: Reader[Int, Int] = identity
   def validateValue: Int => Either[String, PositiveInt] = i => if i > 0 then Right(i) else Left("Positive value expected")
 
   def anotherComputation: PositiveInt => Reader[Int, Either[String, Int]] =
-    (_: PositiveInt) => {
-      println("Yeah!")
-      42
-    }.pure[EitherE[String]].pure[ReaderR[Int]]
+    pi => (pi + 42).pure[EitherE[String]].pure[ReaderR[Int]]
 
   @main def e3_2: Unit =
     val composition: Reader[Int, Either[String, PositiveInt]] = readConfig.map(validateValue)

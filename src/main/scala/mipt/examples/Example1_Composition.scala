@@ -13,6 +13,8 @@ object Question1_Composition:
   def proceedValue: Int => Result = ???
   def logResult: Result => Writer[Result, Result] = ???
 
+  def afterWork: Result => Int = ???
+
   readConfig.map(proceedValue).map(logResult): Reader[Int, Writer[Result, Result]] // How to compose with Result => A???
 
 case class Composed[F[_], G[_], A](value: F[G[A]])
