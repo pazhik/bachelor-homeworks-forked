@@ -59,3 +59,5 @@ flatten[A] compose flatten[F[A]] = flatten[A] compose lift(flatten[A])
   ∀ f: A => B
   trans[B] compose Functor[F].lift(f) = Functor[G].lift(f) compose trans[A]
 ```
+
+Задачи на доказательства можно присылать в любой удобной форме - фотографии записей от руки, комментарии в коде, код на Coq или другом теорем прувере.
