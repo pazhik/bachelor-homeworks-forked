@@ -1,56 +1,54 @@
 package mipt.examples
 
-import mipt.auxiliary.MonoidP
-import mipt.monad.Monad
-import mipt.monad.instances.{EitherE, EitherP, OptionP, ReaderP, ReaderR, WriterP, WriterW}
-import mipt.monad.instances.OptionP.{NoneP, SomeP}
-import mipt.monad.instances.ReaderP.given
+import cats.Monad
+import mipt.monad.instances.{EitherE, Reader, ReaderR, Writer, WriterW}
+import mipt.monad.instances.Reader.given
 import mipt.monad.ApplicativeSyntax.*
 import mipt.monad.FunctorSyntax.*
 import mipt.monad.MonadSyntax.*
-import mipt.monad.instances.EitherP.{LeftP, RightP}
 import mipt.monad.transformers.ReaderT
 
 object Example4_MonadTransformers:
   type Result = String
+  type PositiveInt = Int
 
-  def readConfig: ReaderP[Int, Int] = identity
+  def readConfig: Reader[Int, Int] = identity
   def proceedValue: Int => Result = i => s"config number $i is readed"
-  def logResult: Result => WriterP[Result, Unit] = r => WriterP(r, ())
+  def logResult: Result => Writer[Result, Unit] = r => Writer(r, ())
 
-  def writerComputation: Unit => ReaderP[Int, WriterP[Result, Int]] =
+  def writerComputation: Unit => Reader[Int, Writer[Result, Int]] =
     (_: Unit) => {
       println("Yeah!")
       42
     }.pure[WriterW[Result]].pure[ReaderR[Int]]
 
-  def validateValueO: Int => OptionP[Unit] = i => if i > 0 then SomeP(()) else NoneP
+  def validateValueO: Int => Option[PositiveInt] = i => if i > 0 then Some(i) else None
 
-  def optionComputation: Unit => ReaderP[Int, OptionP[Int]] =
-    (_: Unit) => {
+  def optionComputation: PositiveInt => Reader[Int, Option[Int]] =
+    (_: PositiveInt) => {
       println("Yeah!")
       42
-    }.pure[OptionP].pure[ReaderR[Int]]
+    }.pure[Option].pure[ReaderR[Int]]
 
-  def validateValueE: Int => EitherP[String, Unit] = i => if i > 0 then RightP(()) else LeftP("Positive value expected")
+  def validateValueE: Int => Either[String, PositiveInt] = i => if i > 0 then Right(i) else Left("Positive value expected")
 
-  def eitherComputation: Unit => ReaderP[Int, EitherP[String, Int]] =
-    (_: Unit) => {
+  def eitherComputation: PositiveInt => Reader[Int, Either[String, Int]] =
+    (_: PositiveInt) => {
       println("Yeah!")
       42
     }.pure[EitherE[String]].pure[ReaderR[Int]]
 
   @main def e4: Unit =
-    val compositionW: ReaderP[Int, WriterP[Result, Unit]] = readConfig.map(proceedValue).map(logResult)
-    val compositionO: ReaderP[Int, OptionP[Unit]] = readConfig.map(validateValueO)
-    val compositionE: ReaderP[Int, EitherP[String, Unit]] = readConfig.map(validateValueE)
+    val compositionW: Reader[Int, Writer[Result, Unit]] = readConfig.map(proceedValue).map(logResult)
+    val compositionO: Reader[Int, Option[PositiveInt]] = readConfig.map(validateValueO)
+    val compositionE: Reader[Int, Either[String, PositiveInt]] = readConfig.map(validateValueE)
 
     val wrappedCompositionW: ReaderT[WriterW[Result], Int, Unit] = ReaderT(compositionW)
-    val wrappedCompositionO: ReaderT[OptionP, Int, Unit] = ReaderT(compositionO)
-    val wrappedCompositionE: ReaderT[EitherE[String], Int, Unit] = ReaderT(compositionE)
+    val wrappedCompositionO: ReaderT[Option, Int, PositiveInt] = ReaderT(compositionO)
+    val wrappedCompositionE: ReaderT[EitherE[String], Int, PositiveInt] = ReaderT(compositionE)
     val wrappedFunctionW = (u: Unit) => ReaderT(writerComputation(u))
-    val wrappedFunctionO = (u: Unit) => ReaderT(optionComputation(u))
-    val wrappedFunctionE = (u: Unit) => ReaderT(eitherComputation(u))
+    val wrappedFunctionO = (u: PositiveInt) => ReaderT(optionComputation(u))
+    val wrappedFunctionE = (u: PositiveInt) => ReaderT(eitherComputation(u))
     val flatMappedCompositionW = wrappedCompositionW.flatMap(wrappedFunctionW)
     val flatMappedCompositionO = wrappedCompositionO.flatMap(wrappedFunctionO)
     val flatMappedCompositionE = wrappedCompositionE.flatMap(wrappedFunctionE)

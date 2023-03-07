@@ -1,10 +1,8 @@
 package mipt.monad.context
 
-import mipt.auxiliary.MonoidP
-import mipt.monad.Monad
-import mipt.monad.instances.{WriterP, WriterW}
+import cats.{Monad, Monoid}
+import mipt.monad.instances.{Writer, WriterW}
 import mipt.monad.transformers.{WriterT, WriterTF}
-
 import mipt.monad.ApplicativeSyntax.*
 
 trait Tell[F[_], W]:
@@ -12,11 +10,11 @@ trait Tell[F[_], W]:
 
 object Tell:
   def apply[F[_], W](using Tell[F, W]): Tell[F, W] = summon[Tell[F, W]]
-  
-  given [W: MonoidP]: Tell[WriterW[W], W] = (log: W) => WriterP(log, ())
 
-  given [F[_]: Monad, W: MonoidP]: Tell[WriterTF[F, W], W] = (log: W) => WriterT(WriterP(log, ()).pure[F])
+  given [W: Monoid]: Tell[WriterW[W], W] = (log: W) => Writer(log, ())
+
+  given [F[_]: Monad, W: Monoid]: Tell[WriterTF[F, W], W] = (log: W) => WriterT(Writer(log, ()).pure[F])
 
 object TellSyntax:
-  extension [W: MonoidP] (w: W)
+  extension [W] (w: W)
     def tell[F[_]](using Tell[F, W]): F[Unit] = Tell[F, W].tell(w)

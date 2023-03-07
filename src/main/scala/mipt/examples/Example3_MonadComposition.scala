@@ -1,40 +1,37 @@
 package mipt.examples
 
-import mipt.auxiliary.MonoidP
-import mipt.monad.Monad
-import mipt.monad.instances.{EitherE, EitherP, OptionP, ReaderP, ReaderR, WriterP, WriterW}
-import mipt.monad.instances.OptionP.{NoneP, SomeP}
-import mipt.monad.instances.ReaderP.given
+import cats.{Monad, Monoid}
+import mipt.monad.instances.{EitherE, Reader, ReaderR, Writer, WriterW}
+import mipt.monad.instances.Reader.given
 import mipt.monad.ApplicativeSyntax.*
 import mipt.monad.FunctorSyntax.*
 import mipt.monad.MonadSyntax.*
-import mipt.monad.instances.EitherP.{LeftP, RightP}
+
+import scala.annotation.tailrec
 
 object Question3_MonadComposition:
-  type Result
-  given MonoidP[Result] = ???
+  type Result = String
 
-  def readConfig: ReaderP[Int, Int] = ???
+  def readConfig: Reader[Int, Int] = ???
   def proceedValue: Int => Result = ???
-  def logResult: Result => WriterP[Result, Unit] = ???
+  def logResult: Result => Writer[Result, Unit] = ???
 
-  def anotherComputation: Unit => ReaderP[Int, WriterP[Result, Int]] = ??? // How to compose with our result???
-
-case class ComposedMonad[F[_]: Monad, G[_]: Monad, A](value: F[G[A]])
-type ComposedMonadFG[F[_], G[_]] = [A] =>> ComposedMonad[F, G, A]
+  def anotherComputation: Unit => Reader[Int, Writer[Result, Int]] = ??? // How to compose with our result???
 
 object ComposedMonad:
-  given [F[_]: Monad, G[_]: Monad]: Monad[ComposedMonadFG[F, G]] = new Monad[ComposedMonadFG[F, G]]:
-    override def pure[A](a: A): ComposedMonad[F, G, A] = ComposedMonad(a.pure[G].pure[F])
+  given [F[_]: Monad, G[_]: Monad]: Monad[ComposedFG[F, G]] = new Monad[ComposedFG[F, G]]:
+    override def pure[A](a: A): Composed[F, G, A] = Composed(a.pure[G].pure[F])
 
-    override def flatMap[A, B](fa: ComposedMonadFG[F, G][A])(f: A => ComposedMonadFG[F, G][B]): ComposedMonadFG[F, G][B] = ??? // We have some problems
+    override def flatMap[A, B](fa: ComposedFG[F, G][A])(f: A => ComposedFG[F, G][B]): ComposedFG[F, G][B] = ??? // We have some problems
 
-case class ReaderWriter[R, W: MonoidP, A](value: R => WriterP[W, A])
+    override def tailRecM[A, B](a: A)(f: A => ComposedFG[F, G][Either[A, B]]): ComposedFG[F, G][B] = ???
+
+case class ReaderWriter[R, W: Monoid, A](value: R => Writer[W, A])
 type ReaderWriterRW[R, W] = [A] =>> ReaderWriter[R, W, A]
 
 object ReaderWriter:
-  given [R, W: MonoidP]: Monad[ReaderWriterRW[R, W]] = new Monad[ReaderWriterRW[R, W]]:
-    override def pure[A](a: A): ReaderWriter[R, W, A] = ReaderWriter(_ => WriterP(MonoidP[W].empty, a))
+  given [R, W: Monoid]: Monad[ReaderWriterRW[R, W]] = new Monad[ReaderWriterRW[R, W]]:
+    override def pure[A](a: A): ReaderWriter[R, W, A] = ReaderWriter(_ => Writer(Monoid[W].empty, a))
 
     override def flatMap[A, B](fa: ReaderWriter[R, W, A])(f: A => ReaderWriter[R, W, B]): ReaderWriter[R, W, B] =
       ReaderWriter(r => for {
@@ -42,21 +39,29 @@ object ReaderWriter:
         b <- f(a).value(r)
       } yield b)
 
+    override def tailRecM[A, B](a: A)(f: A => ReaderWriter[R, W, Either[A, B]]): ReaderWriter[R, W, B] =
+      ReaderWriter(
+        r => f(a).value(r).flatMap(_ match
+          case Left(a) => tailRecM(a)(f).value(r)
+          case Right(b) => b.pure[WriterW[W]]
+        )
+      )
+
 object Example3_MonadComposition:
   type Result = String
 
-  def readConfig: ReaderP[Int, Int] = identity
+  def readConfig: Reader[Int, Int] = identity
   def proceedValue: Int => Result = i => s"config number $i is readed"
-  def logResult: Result => WriterP[Result, Unit] = r => WriterP(r, ())
+  def logResult: Result => Writer[Result, Unit] = r => Writer(r, ())
 
-  def anotherComputation: Unit => ReaderP[Int, WriterP[Result, Int]] =
+  def anotherComputation: Unit => Reader[Int, Writer[Result, Int]] =
     (_: Unit) => {
       println("Yeah!")
       42
     }.pure[WriterW[Result]].pure[ReaderR[Int]]
 
   @main def e3: Unit =
-    val composition: ReaderP[Int, WriterP[Result, Unit]] = readConfig.map(proceedValue).map(logResult)
+    val composition: Reader[Int, Writer[Result, Unit]] = readConfig.map(proceedValue).map(logResult)
 
     val wrappedComposition = ReaderWriter(composition)
     val wrappedFunction = (u: Unit) => ReaderWriter(anotherComputation(u))
@@ -65,17 +70,19 @@ object Example3_MonadComposition:
     println(flatMappedComposition.value(2023))
 
 object Question3_1_ReaderOptionComposition:
-  def readConfig: ReaderP[Int, Int] = ???
-  def validateValue: Int => OptionP[Unit] = ???
+  type PositiveInt = Int
 
-  def anotherComputation: Unit => ReaderP[Int, OptionP[Int]] = ??? // How to compose with our result???
+  def readConfig: Reader[Int, Int] = ???
+  def validateValue: Int => Option[PositiveInt] = ???
 
-case class ReaderOption[R, A](value: R => OptionP[A])
+  def anotherComputation: PositiveInt => Reader[Int, Option[Int]] = ??? // How to compose with our result???
+
+case class ReaderOption[R, A](value: R => Option[A])
 type ReaderOptionR[R] = [A] =>> ReaderOption[R, A]
 
 object ReaderOption:
   given [R]: Monad[ReaderOptionR[R]] = new Monad[ReaderOptionR[R]]:
-    override def pure[A](a: A): ReaderOption[R, A] = ReaderOption(_ => SomeP(a))
+    override def pure[A](a: A): ReaderOption[R, A] = ReaderOption(_ => Some(a))
 
     override def flatMap[A, B](fa: ReaderOption[R, A])(f: A => ReaderOption[R, B]): ReaderOption[R, B] =
       ReaderOption(r => for {
@@ -83,38 +90,50 @@ object ReaderOption:
         b <- f(a).value(r)
       } yield b)
 
-object Example3_1_MonadComposition:
-  def readConfig: ReaderP[Int, Int] = identity
-  def validateValue: Int => OptionP[Unit] = i => if i > 0 then SomeP(()) else NoneP
+    override def tailRecM[A, B](a: A)(f: A => ReaderOption[R, Either[A, B]]): ReaderOption[R, B] =
+      ReaderOption(
+        r => f(a).value(r).flatMap(_ match
+          case Left(a) => tailRecM(a)(f).value(r)
+          case Right(b) => b.pure[Option]
+        )
+      )
 
-  def anotherComputation: Unit => ReaderP[Int, OptionP[Int]] =
-    (_: Unit) => {
+object Example3_1_MonadComposition:
+  type PositiveInt = Int
+  
+  def readConfig: Reader[Int, Int] = identity
+  def validateValue: Int => Option[PositiveInt] = i => if i > 0 then Some(i) else None
+
+  def anotherComputation: PositiveInt => Reader[Int, Option[Int]] =
+    (_: PositiveInt) => {
       println("Yeah!")
       42
-    }.pure[OptionP].pure[ReaderR[Int]]
+    }.pure[Option].pure[ReaderR[Int]]
 
   @main def e3_1: Unit =
-    val composition: ReaderP[Int, OptionP[Unit]] = readConfig.map(validateValue)
+    val composition: Reader[Int, Option[PositiveInt]] = readConfig.map(validateValue)
 
     val wrappedComposition = ReaderOption(composition)
-    val wrappedFunction = (u: Unit) => ReaderOption(anotherComputation(u))
+    val wrappedFunction = (u: PositiveInt) => ReaderOption(anotherComputation(u))
     val flatMappedComposition = wrappedComposition.flatMap(wrappedFunction)
 
     println(flatMappedComposition.value(2023))
     println(flatMappedComposition.value(-2023))
 
 object Question3_2_ReaderEitherComposition:
-  def readConfig: ReaderP[Int, Int] = ???
-  def validateValue: Int => EitherP[String, Unit] = ???
+  type PositiveInt = Int
+  
+  def readConfig: Reader[Int, Int] = ???
+  def validateValue: Int => Either[String, PositiveInt] = ???
 
-  def anotherComputation: Unit => ReaderP[Int, EitherP[String, Int]] = ??? // How to compose with our result???
+  def anotherComputation: PositiveInt => Reader[Int, Either[String, Int]] = ??? // How to compose with our result???
 
-case class ReaderEither[R, E, A](value: R => EitherP[E, A]) // Something pretty familiar
+case class ReaderEither[R, E, A](value: R => Either[E, A]) // Something pretty familiar
 type ReaderEitherRE[R, E] = [A] =>> ReaderEither[R, E, A]
 
 object ReaderEither:
   given [R, E]: Monad[ReaderEitherRE[R, E]] = new Monad[ReaderEitherRE[R, E]]: // Looks the same as the previous ones
-    override def pure[A](a: A): ReaderEither[R, E, A] = ReaderEither(_ => RightP(a))
+    override def pure[A](a: A): ReaderEither[R, E, A] = ReaderEither(_ => Right(a))
 
     override def flatMap[A, B](fa: ReaderEither[R, E, A])(f: A => ReaderEither[R, E, B]): ReaderEither[R, E, B] =
       ReaderEither(r => for {
@@ -122,21 +141,31 @@ object ReaderEither:
         b <- f(a).value(r)
       } yield b)
 
-object Example3_2_MonadComposition:
-  def readConfig: ReaderP[Int, Int] = identity
-  def validateValue: Int => EitherP[String, Unit] = i => if i > 0 then RightP(()) else LeftP("Positive value expected")
+    override def tailRecM[A, B](a: A)(f: A => ReaderEither[R, E, Either[A, B]]): ReaderEither[R, E, B] =
+      ReaderEither(
+        r => f(a).value(r).flatMap(_ match
+          case Left(a) => tailRecM(a)(f).value(r)
+          case Right(b) => b.pure[EitherE[E]]
+        )
+      )
 
-  def anotherComputation: Unit => ReaderP[Int, EitherP[String, Int]] =
-    (_: Unit) => {
+object Example3_2_MonadComposition:
+  type PositiveInt = Int
+  
+  def readConfig: Reader[Int, Int] = identity
+  def validateValue: Int => Either[String, PositiveInt] = i => if i > 0 then Right(i) else Left("Positive value expected")
+
+  def anotherComputation: PositiveInt => Reader[Int, Either[String, Int]] =
+    (_: PositiveInt) => {
       println("Yeah!")
       42
     }.pure[EitherE[String]].pure[ReaderR[Int]]
 
   @main def e3_2: Unit =
-    val composition: ReaderP[Int, EitherP[String, Unit]] = readConfig.map(validateValue)
+    val composition: Reader[Int, Either[String, PositiveInt]] = readConfig.map(validateValue)
 
     val wrappedComposition = ReaderEither(composition)
-    val wrappedFunction = (u: Unit) => ReaderEither(anotherComputation(u))
+    val wrappedFunction = (u: PositiveInt) => ReaderEither(anotherComputation(u))
     val flatMappedComposition = wrappedComposition.flatMap(wrappedFunction)
 
     println(flatMappedComposition.value(2023))
