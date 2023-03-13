@@ -3,9 +3,15 @@
 Это задание предназначено для того, чтобы закрепить усвоение материала лекции, научиться работать с
 трансформерами монад.
 
-1) (ToDo практическое задание)
+1) (Logger) Ваша задача - реализовать класс простого логгера, который расширяет монаду F[_] тремя каналами WriterT -
+    debug, info и error
 
-2) Выбрать одну любимую монаду из `Reader, Writer, State, Either` и доказать для её трансформера законы:
+2) (UserRepository) Продолжение задачи из предыдущего дз. Теперь у вас есть класс UserRepositoryDao, обращающийся
+    в каждом методе к базе данных, для этого ему нужен Config, который вы будете брать при помощи Ask. Некоторые
+    методы будут возвращать Either - вам нужно их обрабатывать так, чтобы ошибки переходили в неявную форму,
+    пользуясь интерфейсом MonadThrow
+
+3) Выбрать одну любимую монаду из `Reader, Writer, State, Either` и доказать для её трансформера законы:
 ```scala
 F - Monad
 ∀ A - Type
@@ -59,10 +65,10 @@ _.flatten.lift = F(Some(F(Some(F(Some(a)))))) => F(Some(F(Some(a)))
 fffa match
   case F(Some(F(Some(F(Some(a)))))) => fffa.flatten = F(Some(F(Some(a)))) => fffa.flatten.flatten = F(Some(a))
                                        _.flatten.lift(fffa) = F(Some(F(Some(a)))) => _.flatten(fffa).flatten = F(Some(a))
-  case F(Some(F(Some(F(None))))) => fffa.flatten = F(Some(F(None))) => fffa.flatten.flatten = F(None)
-                                    _.flatten.lift(fffa) = F(Some(F(None))) => _.flatten.lift(fffa).flatten = F(None)
-  case F(Some(F(None))) => fffa.flatten = F(None) => fffa.flatten.flatten = F(None)
-                           _.flatten.lift(fffa) = F(Some(F(None))) => _.flatten.lift(fffa).flatten = F(None)
-  case F(None) => fffa.flatten = F(None) => fffa.flatten.flatten = F(None)
-                  _.flatten.lift(fffa) = F(None) => _.flatten.lift(fffa).flatten = F(None)
+  case F(Some(F(Some(F(None)))))    => fffa.flatten = F(Some(F(None))) => fffa.flatten.flatten = F(None)
+                                       _.flatten.lift(fffa) = F(Some(F(None))) => _.flatten.lift(fffa).flatten = F(None)
+  case F(Some(F(None)))             => fffa.flatten = F(None) => fffa.flatten.flatten = F(None)
+                                       _.flatten.lift(fffa) = F(Some(F(None))) => _.flatten.lift(fffa).flatten = F(None)
+  case F(None)                      => fffa.flatten = F(None) => fffa.flatten.flatten = F(None)
+                                       _.flatten.lift(fffa) = F(None) => _.flatten.lift(fffa).flatten = F(None)
 ```
