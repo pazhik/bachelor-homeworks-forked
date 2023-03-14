@@ -20,11 +20,18 @@ trait UserRepository[F[_]]:
 
 object UserRepositoryDao:
   def apply[F[_]: MonadThrow](dao: UserRepositoryDao)(using Ask[F, Config]): UserRepository[F] = new UserRepository[F]:
-    task"""
-          Реализуйте методы ниже так, чтобы они вызывали методы из UserRepositoryDao с конфигом из Ask
-          и обрабатывали возвращаемые Either в стиле ApplicativeError
+    override def findAll: F[List[User]] = task"""
+          Реализуйте обёртку над методом findAll в dao, используя конфиг из Ask
           """ (2, 1)
-    override def findAll: F[List[User]] = ???
-    override def create(name: UserName, age: Age, friends: Set[UserId]): F[User] = ???
-    override def delete(userId: UserId): F[Unit] = ???
-    override def update(user: User): F[Unit] = ???
+    override def create(name: UserName, age: Age, friends: Set[UserId]): F[User] = task"""
+          Реализуйте обёртку над методом create в dao, используя конфиг из Ask и обработав ошибку из Either
+          при помощи ApplicativeError
+          """ (2, 2)
+    override def delete(userId: UserId): F[Unit] = task"""
+          Реализуйте обёртку над методом delete в dao, используя конфиг из Ask и обработав ошибку из Either
+          при помощи ApplicativeError
+          """ (2, 3)
+    override def update(user: User): F[Unit] = task"""
+          Реализуйте обёртку над методом update в dao, используя конфиг из Ask и обработав ошибку из Either
+          при помощи ApplicativeError
+          """ (2, 4)

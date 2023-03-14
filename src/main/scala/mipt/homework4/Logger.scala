@@ -13,9 +13,12 @@ type WriterTF[F[_], L] = [A] =>> WriterT[F, L, A]
 case class LogEmbed[F[_], A](value: WriterT[WriterTF[WriterTF[F, Vector[Debug]], Vector[Info]], Vector[Error], A])
 
 final case class Logger[F[_]: Monad]():
-  task"""
-        Реализуйте функции debug, info и error, осуществляющие логгирование в соответствующий канал WriterT
+  def debug(debug: String): LogEmbed[F, Unit] = task"""
+        Реализуйте функцию debug, осуществляющую логгирование в соответствующий канал WriterT
         """ (1, 1)
-  def debug(debug: String): LogEmbed[F, Unit] = ???
-  def info(info: String): LogEmbed[F, Unit] = ???
-  def error(error: String): LogEmbed[F, Unit] = ???
+  def info(info: String): LogEmbed[F, Unit] = task"""
+        Реализуйте функцию info, осуществляющую логгирование в соответствующий канал WriterT
+        """ (1, 2)
+  def error(error: String): LogEmbed[F, Unit] = task"""
+        Реализуйте функцию error, осуществляющую логгирование в соответствующий канал WriterT
+        """ (1, 3)
