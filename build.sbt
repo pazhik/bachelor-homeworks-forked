@@ -23,4 +23,6 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio-test" % "2.0.10" % Test
 )
 
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+
 wartremoverErrors ++= Seq[Wart](Any, AsInstanceOf, Null, Return, Throw, While, MutableDataStructures)
