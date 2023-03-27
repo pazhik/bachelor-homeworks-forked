@@ -59,7 +59,7 @@ object UserRepositorySpec extends ZIOSpecDefault {
         dao           <- ZIO.succeed(dao(sampleUsers))
         userRepository = UserRepository(dao)
         users         <- userRepository.findAll
-      } yield assert(users)(equalTo(sampleUsers))
+      } yield assert(users.toSet)(equalTo(sampleUsers.toSet))
     },
     test("create should add a new user") {
       for {
