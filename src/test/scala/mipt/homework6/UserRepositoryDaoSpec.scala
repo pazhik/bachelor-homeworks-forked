@@ -1,12 +1,11 @@
 package mipt.homework6
 
-import mipt.homework6.User._
+import mipt.homework6.User.*
 import mipt.homework6.UserErrors.{UserAlreadyExists, UserDoesNotExists}
 import mipt.homework6.UserRepository.Config
-import zio._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestEnvironment
+import zio.*
+import zio.test.Assertion.*
+import zio.test.*
 
 import scala.util.Random
 
@@ -49,9 +48,8 @@ object UserRepositoryDaoSpecData:
         Right(())
       else Left(UserDoesNotExists(user.id))
 
-
 object UserRepositorySpec extends ZIOSpecDefault {
-  import UserRepositoryDaoSpecData._
+  import UserRepositoryDaoSpecData.*
 
   def spec = suite("UserRepositorySpec")(
     test("findAll should return all users") {
