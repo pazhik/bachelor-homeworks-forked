@@ -1,5 +1,9 @@
-# Домашние задания по курсу Scala в магистратуре МФТИ
+# Постановка задачи
 
-Все домашние задания привязаны к лекциям по номеру. Каждое задание располагается в ветке *homework/lecture-N-M*, где N - номер семестра, M - номер лекции в семестре.
+Это задание предназначено для того, чтобы закрепить усвоение материала лекции, научиться работать с ZIO.
 
-Для работы над домашними заданиями нужно сделать **приватный форк** данного репозитория. Это описано в [инструкции по созданию форка](docs/create-fork/private-fork.md).
+1) https://github.com/mipt-scala-course/magistracy-homeworks/tree/homework/lecture-2-6/src/main/scala/mipt/lecture6
+   Содержит материалы лекции.
+
+2) https://github.com/mipt-scala-course/magistracy-homeworks/tree/homework/lecture-2-6/src/main/scala/mipt/homework6
+  Требуется реализовать методы, закрытые заглушкой *task*
