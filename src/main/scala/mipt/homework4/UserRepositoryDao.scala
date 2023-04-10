@@ -20,18 +20,35 @@ trait UserRepository[F[_]]:
 
 object UserRepositoryDao:
   def apply[F[_]: MonadThrow](dao: UserRepositoryDao)(using Ask[F, Config]): UserRepository[F] = new UserRepository[F]:
-    override def findAll: F[List[User]] = task"""
-          Реализуйте обёртку над методом findAll в dao, используя конфиг из Ask
-          """ (2, 1)
-    override def create(name: UserName, age: Age, friends: Set[UserId]): F[User] = task"""
-          Реализуйте обёртку над методом create в dao, используя конфиг из Ask и обработав ошибку из Either
-          при помощи ApplicativeError
-          """ (2, 2)
-    override def delete(userId: UserId): F[Unit] = task"""
-          Реализуйте обёртку над методом delete в dao, используя конфиг из Ask и обработав ошибку из Either
-          при помощи ApplicativeError
-          """ (2, 3)
-    override def update(user: User): F[Unit] = task"""
-          Реализуйте обёртку над методом update в dao, используя конфиг из Ask и обработав ошибку из Either
-          при помощи ApplicativeError
-          """ (2, 4)
+    override def findAll: F[List[User]] = summon[Ask[F, Config]].reader(c => dao.findAll(c))
+//      task"""
+//          Реализуйте обёртку над методом findAll в dao, используя конфиг из Ask
+//          """ (2, 1)
+    override def create(name: UserName, age: Age, friends: Set[UserId]): F[User] = summon[MonadThrow[F]].flatMap(
+      summon[Ask[F, Config]].ask)(c =>
+        summon[MonadThrow[F]].fromEither(
+          dao.create(name, age, friends)(c).left.map(e => new RuntimeException(s"User ${e.name} already exists"))
+        )
+      )
+//  task"""
+//          Реализуйте обёртку над методом create в dao, используя конфиг из Ask и обработав ошибку из Either
+//          при помощи ApplicativeError
+//          """ (2, 2)
+    override def delete(userId: UserId): F[Unit] = summon[MonadThrow[F]].flatMap(summon[Ask[F, Config]].ask)(c =>
+      summon[MonadThrow[F]].fromEither(
+        dao.delete(userId)(c).left.map(e => new RuntimeException(s"User ${e.id} does not exist"))
+      )
+    )
+//  task"""
+//          Реализуйте обёртку над методом delete в dao, используя конфиг из Ask и обработав ошибку из Either
+//          при помощи ApplicativeError
+//          """ (2, 3)
+    override def update(user: User): F[Unit] = summon[MonadThrow[F]].flatMap(summon[Ask[F, Config]].ask)(c =>
+      summon[MonadThrow[F]].fromEither(
+        dao.update(user)(c).left.map(e => new RuntimeException(s"User ${e.id} does not exist"))
+      )
+    )
+//  task"""
+//          Реализуйте обёртку над методом update в dao, используя конфиг из Ask и обработав ошибку из Either
+//          при помощи ApplicativeError
+//          """ (2, 4)
